@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Buku Hutang Kantin</title>
+  <title>DEBT BOOK</title>
 
   <style>
 
@@ -79,13 +79,13 @@
       transform:scale(1.02);
     }
 
-    .hutang-list{
+    .DEBT-list{
       display:flex;
       flex-direction:column;
       gap:18px;
     }
 
-    .hutang-item{
+    .DEBT-item{
       background:white;
       border-radius:20px;
       padding:20px;
@@ -97,13 +97,13 @@
       border-left:10px solid #0066ff;
     }
 
-    .hutang-info h3{
+    .DEBT-info h3{
       font-size:24px;
       color:#333;
       margin-bottom:8px;
     }
 
-    .hutang-info p{
+    .DEBT-info p{
       font-size:20px;
       color:#666;
       font-weight:bold;
@@ -159,7 +159,7 @@
 
     @media(max-width:700px){
 
-      .hutang-item{
+      .DELETE-item{
         flex-direction:column;
         align-items:flex-start;
       }
@@ -182,44 +182,44 @@
   <div class="container">
 
     <div class="title">
-      📒 Buku Hutang Kantin
+      📒 DEBT BOOK
     </div>
 
     <div class="card">
 
-      <h2>Tambah Hutang</h2>
+      <h2>ADD</h2>
 
       <input 
         type="text" 
-        id="nama" 
+        id="NAME" 
         placeholder="Masukkan nama pembeli"
       >
 
       <input 
         type="number" 
-        id="jumlah" 
-        placeholder="Masukkan jumlah hutang"
+        id="TOTAL" 
+        placeholder="INSERT TOTAL DEBT"
       >
 
-      <button class="add-btn" onclick="tambahHutang()">
-        Tambah Hutang
+      <button class="add-btn" onclick="ADD()">
+        ADD
       </button>
 
     </div>
 
-    <div class="hutang-list" id="hutangList"></div>
+    <div class="DEBT-list" id="DEBTList"></div>
 
   </div>
 
 <script>
 
-  let hutangData =
+  let DEBTData =
     JSON.parse(localStorage.getItem("hutangData")) || [];
 
   function saveData(){
 
     localStorage.setItem(
-      "hutangData",
+      "DEBTData",
       JSON.stringify(hutangData)
     );
 
@@ -255,53 +255,53 @@
 
   }
 
-  function tambahHutang(){
+  function ADD (){
 
-    let nama =
+    let NAME =
       document.getElementById("nama")
       .value
       .trim();
 
-    let jumlah =
+    let TOTAL =
       parseFloat(
         document.getElementById("jumlah").value
       );
 
-    if(nama === "" || isNaN(jumlah)){
+    if(NAME === "" || isNaN(TOTAL)){
 
-      alert("Sila isi nama dan jumlah hutang!");
+      alert("PLEASE ENTER NAME AMOUNT!");
 
       return;
 
     }
 
     let existingPerson =
-      hutangData.find(
+      DEBTData.find(
         item =>
-        item.nama.toLowerCase() ===
-        nama.toLowerCase()
+        item.NAME.toLowerCase() ===
+        NAME.toLowerCase()
       );
 
     if(existingPerson){
 
-      existingPerson.hutang += jumlah;
+      existingPerson.NAME += TOTAL;
 
       speak(
-        nama +
-        " hutang bertambah menjadi RM " +
+        NAME +
+        " NEW AMOUNT RM " +
         existingPerson.hutang
       );
 
       if(existingPerson.hutang >= 50){
 
         alert(
-          "⚠️ Hutang pembeli melebihi had!"
+          "⚠️ “Limit exceeded”!"
         );
 
         vibratePhone();
 
         speak(
-          "Amaran. Hutang pembeli melebihi had"
+          "Warning: Buyer’s debt is over the limit"
         );
 
       }
@@ -310,29 +310,29 @@
 
     else{
 
-      hutangData.push({
+      DEBTData.push({
 
-        nama:nama,
-        hutang:jumlah
+        NAME:NAME,
+        DEBT:TOTAL
 
       });
 
       speak(
-        nama +
-        " hutang RM " +
-        jumlah
+        NAME +
+        " DEBT RM " +
+        TOTAL
       );
 
-      if(jumlah >= 50){
+      if(TOTAL >= 50){
 
         alert(
-          "⚠️ Hutang pembeli melebihi had!"
+          "⚠️ “Limit exceeded!"
         );
 
         vibratePhone();
 
         speak(
-          "Amaran. Hutang pembeli melebihi had"
+          "Warning: Buyer’s debt is over the limit"
         );
 
       }
@@ -343,21 +343,21 @@
 
     displayData();
 
-    document.getElementById("nama").value = "";
-    document.getElementById("jumlah").value = "";
+    document.getElementById("NAME").value = "";
+    document.getElementById("TOTAL").value = "";
 
   }
 
-  function bayar(index){
+  function PAID(index){
 
-    let nama = hutangData[index].nama;
+    let NAME = DEBTData[index].NAME;
 
     speak(
-      nama +
-      " sudah bayar hutang"
+      NAME +
+      " PAYMENT COMPLETED"
     );
 
-    hutangData.splice(index,1);
+    DEBTData.splice(index,1);
 
     saveData();
 
@@ -365,9 +365,9 @@
 
   }
 
-  function padam(index){
+  function DELETE(index){
 
-    hutangData.splice(index,1);
+    DEBTData.splice(index,1);
 
     saveData();
 
@@ -377,17 +377,17 @@
 
   function displayData(){
 
-    let hutangList =
-      document.getElementById("hutangList");
+    let DEBTList =
+      document.getElementById("DEBTList");
 
-    hutangList.innerHTML = "";
+    DEBTList.innerHTML = "";
 
-    if(hutangData.length === 0){
+    if(DEBTData.length === 0){
 
-      hutangList.innerHTML =
+      DEBTList.innerHTML =
       `
         <div class="empty">
-          Tiada hutang lagi 🎉
+        No debt remaining 🎉
         </div>
       `;
 
@@ -395,34 +395,34 @@
 
     }
 
-    hutangData.forEach((item,index)=>{
+  DEBTData.forEach((item,index)=>{
 
       let warningText = "";
 
-      if(item.hutang >= 50){
+      if(item.DEBT >= 50){
 
         warningText =
         `
           <div class="warning">
-            ⚠️ Hutang Melebihi Had!
+            ⚠️“Limit exceeded”!
           </div>
         `;
 
       }
 
-      hutangList.innerHTML +=
+      DEBTList.innerHTML +=
       `
 
-      <div class="hutang-item">
+      <div class="DEBT-item">
 
-        <div class="hutang-info">
+        <div class="DEBT-info">
 
           <h3>
-            ${item.nama}
+            ${item.NAME}
           </h3>
 
           <p>
-            Hutang: RM${item.hutang.toFixed(2)}
+           DEBT: RM${item.DEBT.toFixed(2)}
           </p>
 
           ${warningText}
@@ -433,16 +433,16 @@
 
           <button
             class="paid-btn"
-            onclick="bayar(${index})"
+            onclick="PAY(${index})"
           >
-            ✅ Dah Bayar
+            ✅"Payment Completed"
           </button>
 
           <button
             class="delete-btn"
-            onclick="padam(${index})"
+            onclick="DELETE(${index})"
           >
-            ❌ Padam
+            ❌DELETE
           </button>
 
         </div>
