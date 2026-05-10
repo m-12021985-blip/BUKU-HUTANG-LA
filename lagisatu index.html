@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canteen Debt Book</title>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, sans-serif;
+    }
+
+    body{
+      background:#ffe6f2;
+      padding:20px;
+    }
+
+    .container{
+      max-width:900px;
+      margin:auto;
+    }
+
+    h1{
+      text-align:center;
+      color:#0066ff;
+      margin-bottom:20px;
+      font-size:40px;
+    }
+
+    .card{
+      background:white;
+      padding:20px;
+      border-radius:20px;
+      box-shadow:0 5px 15px rgba(0,0,0,0.1);
+      margin-bottom:20px;
+    }
+
+    input{
+      width:100%;
+      padding:12px;
+      margin-top:10px;
+      border-radius:12px;
+      border:2px solid #ddd;
+      font-size:16px;
+    }
+
+    button{
+      padding:12px 20px;
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:16px;
+      margin-top:15px;
+    }
+
+    .add-btn{
+      background:#0066ff;
+      color:white;
+      width:100%;
+    }
+
+    .add-btn:hover{
+      background:#0052cc;
+    }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:15px;
+    }
+
+    .item{
+      background:#f9f9f9;
+      padding:15px;
+      border-radius:15px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      border-left:8px solid #0066ff;
+    }
+
+    .info h2{
+      margin-bottom:5px;
+    }
+
+    .info p{
+      font-size:18px;
+      font-weight:bold;
+      color:#444;
+    }
+
+    .buttons{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .paid{
+      background:#00b894;
+      color:white;
+    }
+
+    .delete{
+      background:#ff4d4d;
+      color:white;
+    }
+
+    .warning{
+      color:red;
+      font-weight:bold;
+      margin-top:5px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>📒 Canteen Debt Book</h1>
+
+  <div class="card">
+
+    <h2>Add Debt</h2>
+
+    <input type="text" id="name" placeholder="Enter customer name">
+    <input type="number" id="amount" placeholder="Enter debt amount">
+
+    <button class="add-btn" onclick="addDebt()">Add Debt</button>
+
+  </div>
+
+  <div class="list" id="list"></div>
+
+</div>
+
+<script>
+
+let data = JSON.parse(localStorage.getItem("debtData")) || [];
+
+function save(){
+  localStorage.setItem("debtData", JSON.stringify(data));
+}
+
+function speak(text){
+  let msg = new SpeechSynthesisUtterance(text);
+  msg.lang = "en-US";
+  window.speechSynthesis.speak(msg);
+}
+
+function vibrate(){
+  if(navigator.vibrate){
+    navigator.vibrate([200,100,200,100,400]);
+  }
+}
+
+function addDebt(){
+
+  let name = document.getElementById("name").value.trim();
+  let amount = parseFloat(document.getElementById("amount").value);
+
+  if(name === "" || isNaN(amount)){
+    alert("Please enter name and amount!");
+    return;
+  }
+
+  let existing = data.find(x => x.name.toLowerCase() === name.toLowerCase());
+
+  if(existing){
+    existing.amount += amount;
+    speak(name + " debt increased to " + existing.amount + " ringgit");
+
+    if(existing.amount >= 50){
+      alert("⚠ Debt limit exceeded!");
+      vibrate();
+      speak("Warning. Debt limit exceeded");
+    }
+
+  } else {
+    data.push({name:name, amount:amount});
+    speak(name + " owes " + amount + " ringgit");
+
+    if(amount >= 50){
+      alert("⚠ Debt limit exceeded!");
+      vibrate();
+      speak("Warning. Debt limit exceeded");
+    }
+  }
+
+  save();
+  show();
+
+  document.getElementById("name").value = "";
+  document.getElementById("amount").value = "";
+}
+
+function paid(i){
+  speak(data[i].name + " has paid the debt");
+  data.splice(i,1);
+  save();
+  show();
+}
+
+function remove(i){
+  data.splice(i,1);
+  save();
+  show();
+}
+
+function show(){
+
+  let list = document.getElementById("list");
+  list.innerHTML = "";
+
+  data.forEach((item,i)=>{
+
+    let warn = "";
+
+    if(item.amount >= 50){
+      warn = `<div class="warning">⚠ Debt Over Limit!</div>`;
+    }
+
+    list.innerHTML += `
+      <div class="item">
+
+        <div class="info">
+          <h2>${item.name}</h2>
+          <p>Debt: RM${item.amount.toFixed(2)}</p>
+          ${warn}
+        </div>
+
+        <div class="buttons">
+          <button class="paid" onclick="paid(${i})">Paid</button>
+          <button class="delete" onclick="remove(${i})">Delete</button>
+        </div>
+
+      </div>
+    `;
+  });
+}
+
+show();
+
+</script>
+
+</body>
+</html>
