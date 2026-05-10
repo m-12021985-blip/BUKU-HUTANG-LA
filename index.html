@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Buku Hutang Kantin</title>
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, sans-serif;
+    }
+
+    body{
+      background:#ffe6f2;
+      min-height:100vh;
+      padding:20px;
+    }
+
+    .container{
+      max-width:900px;
+      margin:auto;
+    }
+
+    .title{
+      text-align:center;
+      font-size:42px;
+      color:#0066ff;
+      margin-bottom:25px;
+      font-weight:bold;
+    }
+
+    .card{
+      background:white;
+      padding:25px;
+      border-radius:25px;
+      box-shadow:0 5px 15px rgba(0,0,0,0.1);
+      margin-bottom:25px;
+    }
+
+    .card h2{
+      margin-bottom:15px;
+      color:#333;
+    }
+
+    input{
+      width:100%;
+      padding:15px;
+      border-radius:15px;
+      border:2px solid #ddd;
+      margin-top:12px;
+      font-size:16px;
+      outline:none;
+    }
+
+    input:focus{
+      border-color:#0066ff;
+    }
+
+    .add-btn{
+      width:100%;
+      padding:15px;
+      border:none;
+      background:#0066ff;
+      color:white;
+      border-radius:15px;
+      margin-top:15px;
+      font-size:17px;
+      cursor:pointer;
+      transition:0.3s;
+      font-weight:bold;
+    }
+
+    .add-btn:hover{
+      background:#0052cc;
+      transform:scale(1.02);
+    }
+
+    .hutang-list{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .hutang-item{
+      background:white;
+      border-radius:20px;
+      padding:20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      box-shadow:0 5px 10px rgba(0,0,0,0.08);
+      border-left:10px solid #0066ff;
+    }
+
+    .hutang-info h3{
+      font-size:24px;
+      color:#333;
+      margin-bottom:8px;
+    }
+
+    .hutang-info p{
+      font-size:20px;
+      color:#666;
+      font-weight:bold;
+    }
+
+    .warning{
+      color:red;
+      margin-top:8px;
+      font-weight:bold;
+      font-size:15px;
+    }
+
+    .buttons{
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+      flex-wrap:wrap;
+    }
+
+    .paid-btn{
+      background:#00b894;
+      color:white;
+      border:none;
+      padding:12px 18px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:15px;
+      font-weight:bold;
+    }
+
+    .delete-btn{
+      background:#ff4d4d;
+      color:white;
+      border:none;
+      padding:12px 18px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:15px;
+      font-weight:bold;
+    }
+
+    .paid-btn:hover,
+    .delete-btn:hover{
+      transform:scale(1.05);
+    }
+
+    .empty{
+      text-align:center;
+      color:#777;
+      margin-top:20px;
+      font-size:20px;
+    }
+
+    @media(max-width:700px){
+
+      .hutang-item{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+
+      .buttons{
+        width:100%;
+      }
+
+      .buttons button{
+        flex:1;
+      }
+
+    }
+
+  </style>
+
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="title">
+      📒 Buku Hutang Kantin
+    </div>
+
+    <div class="card">
+
+      <h2>Tambah Hutang</h2>
+
+      <input 
+        type="text" 
+        id="nama" 
+        placeholder="Masukkan nama pembeli"
+      >
+
+      <input 
+        type="number" 
+        id="jumlah" 
+        placeholder="Masukkan jumlah hutang"
+      >
+
+      <button class="add-btn" onclick="tambahHutang()">
+        Tambah Hutang
+      </button>
+
+    </div>
+
+    <div class="hutang-list" id="hutangList"></div>
+
+  </div>
+
+<script>
+
+  let hutangData =
+    JSON.parse(localStorage.getItem("hutangData")) || [];
+
+  function saveData(){
+
+    localStorage.setItem(
+      "hutangData",
+      JSON.stringify(hutangData)
+    );
+
+  }
+
+  function speak(text){
+
+    let speech =
+      new SpeechSynthesisUtterance(text);
+
+    speech.lang = "ms-MY";
+    speech.volume = 1;
+    speech.rate = 1;
+    speech.pitch = 1;
+
+    window.speechSynthesis.speak(speech);
+
+  }
+
+  function vibratePhone(){
+
+    if(navigator.vibrate){
+
+      navigator.vibrate([
+        300,
+        200,
+        300,
+        200,
+        500
+      ]);
+
+    }
+
+  }
+
+  function tambahHutang(){
+
+    let nama =
+      document.getElementById("nama")
+      .value
+      .trim();
+
+    let jumlah =
+      parseFloat(
+        document.getElementById("jumlah").value
+      );
+
+    if(nama === "" || isNaN(jumlah)){
+
+      alert("Sila isi nama dan jumlah hutang!");
+
+      return;
+
+    }
+
+    let existingPerson =
+      hutangData.find(
+        item =>
+        item.nama.toLowerCase() ===
+        nama.toLowerCase()
+      );
+
+    if(existingPerson){
+
+      existingPerson.hutang += jumlah;
+
+      speak(
+        nama +
+        " hutang bertambah menjadi RM " +
+        existingPerson.hutang
+      );
+
+      if(existingPerson.hutang >= 50){
+
+        alert(
+          "⚠️ Hutang pembeli melebihi had!"
+        );
+
+        vibratePhone();
+
+        speak(
+          "Amaran. Hutang pembeli melebihi had"
+        );
+
+      }
+
+    }
+
+    else{
+
+      hutangData.push({
+
+        nama:nama,
+        hutang:jumlah
+
+      });
+
+      speak(
+        nama +
+        " hutang RM " +
+        jumlah
+      );
+
+      if(jumlah >= 50){
+
+        alert(
+          "⚠️ Hutang pembeli melebihi had!"
+        );
+
+        vibratePhone();
+
+        speak(
+          "Amaran. Hutang pembeli melebihi had"
+        );
+
+      }
+
+    }
+
+    saveData();
+
+    displayData();
+
+    document.getElementById("nama").value = "";
+    document.getElementById("jumlah").value = "";
+
+  }
+
+  function bayar(index){
+
+    let nama = hutangData[index].nama;
+
+    speak(
+      nama +
+      " sudah bayar hutang"
+    );
+
+    hutangData.splice(index,1);
+
+    saveData();
+
+    displayData();
+
+  }
+
+  function padam(index){
+
+    hutangData.splice(index,1);
+
+    saveData();
+
+    displayData();
+
+  }
+
+  function displayData(){
+
+    let hutangList =
+      document.getElementById("hutangList");
+
+    hutangList.innerHTML = "";
+
+    if(hutangData.length === 0){
+
+      hutangList.innerHTML =
+      `
+        <div class="empty">
+          Tiada hutang lagi 🎉
+        </div>
+      `;
+
+      return;
+
+    }
+
+    hutangData.forEach((item,index)=>{
+
+      let warningText = "";
+
+      if(item.hutang >= 50){
+
+        warningText =
+        `
+          <div class="warning">
+            ⚠️ Hutang Melebihi Had!
+          </div>
+        `;
+
+      }
+
+      hutangList.innerHTML +=
+      `
+
+      <div class="hutang-item">
+
+        <div class="hutang-info">
+
+          <h3>
+            ${item.nama}
+          </h3>
+
+          <p>
+            Hutang: RM${item.hutang.toFixed(2)}
+          </p>
+
+          ${warningText}
+
+        </div>
+
+        <div class="buttons">
+
+          <button
+            class="paid-btn"
+            onclick="bayar(${index})"
+          >
+            ✅ Dah Bayar
+          </button>
+
+          <button
+            class="delete-btn"
+            onclick="padam(${index})"
+          >
+            ❌ Padam
+          </button>
+
+        </div>
+
+      </div>
+
+      `;
+
+    });
+
+  }
+
+  displayData();
+
+</script>
+
+</body>
+</html>
