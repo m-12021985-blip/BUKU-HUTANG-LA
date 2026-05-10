@@ -1,0 +1,323 @@
+# Buku Hutang Kantin Website
+
+```html
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buku Hutang Kantin</title>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, sans-serif;
+    }
+
+    body{
+      background:#ffe6f0;
+      padding:20px;
+    }
+
+    .container{
+      max-width:900px;
+      margin:auto;
+    }
+
+    h1{
+      text-align:center;
+      color:#0066ff;
+      margin-bottom:20px;
+      font-size:40px;
+    }
+
+    .card{
+      background:white;
+      padding:20px;
+      border-radius:20px;
+      box-shadow:0 5px 15px rgba(0,0,0,0.1);
+      margin-bottom:20px;
+    }
+
+    input{
+      width:100%;
+      padding:12px;
+      margin-top:10px;
+      border-radius:12px;
+      border:2px solid #ddd;
+      font-size:16px;
+    }
+
+    button{
+      padding:12px 20px;
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:16px;
+      margin-top:15px;
+      transition:0.3s;
+    }
+
+    .add-btn{
+      background:#0066ff;
+      color:white;
+      width:100%;
+    }
+
+    .add-btn:hover{
+      background:#0052cc;
+    }
+
+    .hutang-list{
+      display:flex;
+      flex-direction:column;
+      gap:15px;
+    }
+
+    .hutang-item{
+      background:#f9f9f9;
+      padding:15px;
+      border-radius:15px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      border-left:8px solid #0066ff;
+    }
+
+    .hutang-info h2{
+      color:#333;
+      margin-bottom:5px;
+    }
+
+    .hutang-info p{
+      color:#666;
+      font-size:18px;
+    }
+
+    .buttons{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .paid-btn{
+      background:#00b894;
+      color:white;
+    }
+
+    .delete-btn{
+      background:#ff4d4d;
+      color:white;
+    }
+
+    .warning{
+      color:red;
+      font-weight:bold;
+      margin-top:5px;
+    }
+
+    @media(max-width:600px){
+      .hutang-item{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:10px;
+      }
+
+      .buttons{
+        width:100%;
+      }
+
+      .buttons button{
+        flex:1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>📒 Buku Hutang Kantin</h1>
+
+    <div class="card">
+      <h2>Tambah Hutang</h2>
+
+      <input type="text" id="nama" placeholder="Masukkan nama pembeli">
+
+      <input type="number" id="jumlah" placeholder="Masukkan jumlah hutang">
+
+      <button class="add-btn" onclick="tambahHutang()">Tambah Hutang</button>
+    </div>
+
+    <div class="hutang-list" id="hutangList"></div>
+  </div>
+
+<script>
+
+let hutangData = JSON.parse(localStorage.getItem("hutangData")) || [];
+
+function simpanData(){
+  localStorage.setItem("hutangData", JSON.stringify(hutangData));
+}
+
+function suara(text){
+  let speech = new SpeechSynthesisUtterance(text);
+  speech.lang = "ms-MY";
+  speech.volume = 1;
+  speech.rate = 1;
+  speech.pitch = 1;
+  window.speechSynthesis.speak(speech);
+}
+
+function vibration(){
+  if(navigator.vibrate){
+    navigator.vibrate([300,200,300,200,500]);
+  }
+}
+
+function tambahHutang(){
+
+  let nama = document.getElementById("nama").value.trim();
+  let jumlah = parseFloat(document.getElementById("jumlah").value);
+
+  if(nama === "" || isNaN(jumlah)){
+    alert("Sila isi nama dan jumlah hutang!");
+    return;
+  }
+
+  let jumpa = hutangData.find(item => item.nama.toLowerCase() === nama.toLowerCase());
+
+  if(jumpa){
+    jumpa.hutang += jumlah;
+
+    suara(nama + " hutang bertambah menjadi RM" + jumpa.hutang);
+
+    if(jumpa.hutang >= 50){
+      vibration();
+      alert("⚠️ Hutang pembeli melebihi had!");
+      suara("Amaran. Hutang pembeli melebihi had");
+    }
+
+  } else {
+
+    hutangData.push({
+      nama:nama,
+      hutang:jumlah
+    });
+
+    suara(nama + " hutang RM" + jumlah);
+
+    if(jumlah >= 50){
+      vibration();
+      alert("⚠️ Hutang pembeli melebihi had!");
+      suara("Amaran. Hutang pembeli melebihi had");
+    }
+  }
+
+  simpanData();
+  paparData();
+
+  document.getElementById("nama").value = "";
+  document.getElementById("jumlah").value = "";
+}
+
+function bayar(index){
+
+  let nama = hutangData[index].nama;
+
+  suara(nama + " sudah bayar hutang");
+
+  hutangData.splice(index,1);
+
+  simpanData();
+  paparData();
+}
+
+function padam(index){
+  hutangData.splice(index,1);
+
+  simpanData();
+  paparData();
+}
+
+function paparData(){
+
+  let list = document.getElementById("hutangList");
+
+  list.innerHTML = "";
+
+  hutangData.forEach((item,index)=>{
+
+    let warningText = "";
+
+    if(item.hutang >= 50){
+      warningText = `<div class="warning">⚠️ Hutang Melebihi Had!</div>`;
+    }
+
+    list.innerHTML += `
+
+      <div class="hutang-item">
+
+        <div class="hutang-info">
+          <h2>${item.nama}</h2>
+          <p>Hutang: RM${item.hutang.toFixed(2)}</p>
+          ${warningText}
+        </div>
+
+        <div class="buttons">
+          <button class="paid-btn" onclick="bayar(${index})">Dah Bayar</button>
+
+          <button class="delete-btn" onclick="padam(${index})">Padam</button>
+        </div>
+
+      </div>
+
+    `;
+  });
+}
+
+paparData();
+
+</script>
+
+</body>
+</html>
+```
+
+# Cara Letak Dalam GitHub
+
+1. Buka VS Code.
+2. Buat folder baru.
+3. Buat fail bernama `index.html`.
+4. Copy SEMUA coding atas.
+5. Paste dalam `index.html`.
+6. Save.
+7. Upload folder ke GitHub.
+8. Pergi Settings > Pages.
+9. Pilih branch `main`.
+10. Tekan Save.
+11. Website siap.
+
+# Features Website
+
+✅ Simpan nama orang berhutang
+
+✅ Kalau nama sama → hutang automatik tambah
+
+✅ Suara automatik:
+
+* “Aiman hutang RM7”
+* “Aiman hutang bertambah menjadi RM50”
+
+✅ Button “Dah Bayar”
+
+* Nama automatik hilang dari list
+
+✅ Notification & vibration bila hutang lebih RM50
+
+✅ Data save walaupun refresh website
+
+✅ Design soft pink + button biru
+
